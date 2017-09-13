@@ -126,10 +126,10 @@ class WeChat
         $news_arr = [];
 
         $news = [
-                'title' => '都被骗了，iPhone 8真正能买到的时间——明年',
-                'desc' => '发布会对我们来说已经没什么吸引力了，全世界的人都知道iPhone 8具体是个什么样，看不看发布会已经无所谓了。',
-                'picurl' => 'https://mmbiz.qpic.cn/mmbiz_jpg/PicLGiaOegHVfOrTQVWylBoNDnrI6o8cU6qIIPgUQ63OrNuJiaoYkg4gAfibWT0wBGJHT1p4zPbv4KuRwldwuTYdAw/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1',
-                'url' => 'http://mp.weixin.qq.com/s?__biz=MjM5NzAwNzMyMA==&mid=2659800672&idx=1&sn=28b560eeacc31e30633d96b6ddcce2a8&chksm=bd9d6cd78aeae5c1609b95f031b1810886ac902a2aaf0224575ba27ec6bda6eec221dd79a7&scene=27#wechat_redirect'
+                'title' => '全面屏iPhone X简直有毒！乔布斯的苹果终于回来了',
+                'desc' => 'iPhone X在发布前就已经被曝到体无完肤，万万没想到，发布会还真的是连打脸的机会都不给我！亏果粉们都熬夜看了一场重播',
+                'picurl' => 'https://mmbiz.qpic.cn/mmbiz_jpg/PicLGiaOegHVd9Ce8yFuGQkkIjBP1xMY772oMkG9LLFfQicYOrgPuPoEvnM7tNSRCWJXlsJ45eYoibByPX9xKm2wTw/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1',
+                'url' => 'https://mp.weixin.qq.com/s?__biz=MjM5NzAwNzMyMA==&mid=2659800881&idx=1&sn=210be5516bed1a183aba6e7abc0c7eeb&chksm=bd9d6d868aeae490248d7c7ad80c2245bae28e7a3473526cc17a9c53d3cd61c733b0ac58d470#rd'
         ];
         $news_arr[] = $news;
 
