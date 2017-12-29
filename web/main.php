@@ -10,15 +10,17 @@ $obj->responseMsg();
 
 class WeChat
 {
-	public $db_con = null;
-	public $category = null;
-
+	private $db_con = null;
+	private $category = null;
+	private $cate = null;
+	
 	public function __construct()
 	{
 		global $dns;
 		global $account_category;
 		$this->db_con = new Mysql($dns['host'],$dns['user'],$dns['password'],$dns['db']);
 		$this->category = $account_category;
+		$this->cate = ['1' => '餐饮', '2' => '购物消费', '3' => '交通', '4' => '居家生活', '5' => '其他'];
 	}
 
     public function responseMsg()
@@ -38,9 +40,10 @@ class WeChat
 					$info = $arr[0];
 					$pay = $arr[1];	
 					$user_id = $fromUsername;
-					$cate = $this->_getCategory($content);
-
-					if($this->db_con->insert('user_bill', ['user_id' => $user_id, 'info' => $info, 'category' => $cate, 'pay' => $pay])) {
+					$cate_type = $this->_getCategory($content);
+					$cate = $this->cate[$cate_type];
+					
+					if($this->db_con->insert('user_bill', ['user_id' => $user_id, 'info' => $info, 'category' => $cate_type, 'pay' => $pay])) {
 							$ret = '记账成功通知';
 							echo $wx->sendArticle($fromUsername, $toUsername, $this->handleArticle($user_id, $ret, $info, $cate, $pay));
 					} else {
@@ -169,6 +172,7 @@ class WeChat
 
         return $news_arr;
     }
+
 	public function  _getCategory($bill_info)
 	{
 		$ret = '5';
@@ -183,26 +187,6 @@ class WeChat
 		return $ret;
 	}
 
-	public function _gatherAccount($user_id)
-	{
-		$ret = [];
-		$sql = "SELECT category,sum(pay) from `user_bill` where user_id='$user_id' group by category";
-		$user_bill_result = $this->db_con->query($sql, true);
-		$pay_type_result = $this->db_con->get('pay_type',['category','name']);
-		$category = [];
-		foreach($pay_type_result as $v) {
-			$category[$v[0]] = $v[1];
-		}
-		$sum = 0;
-		foreach($user_bill_result as $b) {
-			$tmp = $category[$b[0]];
-			$ret[$tmp] = $b[1];
-			$sum += $b[1];
-		}	
-		$ret['合计'] = $sum;
-		return $ret;
-		//$this->db_con->
-	}
 }
 
 /*
