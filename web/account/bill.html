@@ -1,0 +1,129 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+<title>账单详情</title>
+<script src="https://cdn.bootcss.com/echarts/3.8.5/echarts.min.js"></script>
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+</head>
+<body>
+<!-- 使用 -->
+<div id="trend" style="width: 370px;height:200px;"></div>
+<div id="main" style="width: 320px;height:200px;"></div>
+</body>
+<script type="text/javascript">
+function getRequest(){
+	var url = location.search;
+	if(url.indexOf('?')!=-1){
+		var str = url.substr(1);
+		strs = str.split('=');
+		return strs[1];
+	}
+}
+$.get('b.php',{uid:getRequest()},function(d){
+		var jsondata = JSON.parse(d);
+		var bill = jsondata['bill'];
+		var tre = jsondata['trend'];
+		var datelist = tre.map(function(item){return item[0]});
+		var valuelist = tre.map(function(item){return parseFloat(item[1])});
+		var chart_data = [];
+		var lengend_data = [];
+		for(o in bill) {
+		t = {};
+		t.name = o;
+		lengend_data.push(o);
+		t.value = bill[o];
+		chart_data.push(t);
+		}	
+		var myChart = echarts.init(document.getElementById('main'));
+		var trendchart = echarts.init(document.getElementById('trend'));
+		pie_option = {
+		    title: {
+		        left: 'center',
+		        text: '消费占比',
+		        textStyle: {
+		            fontSize: 15
+		        }
+		    },
+		    tooltip: {
+		        trigger: 'item',
+		        formatter: '{b}:{c}元'
+		    },
+		    series: [{
+		        type: 'pie',
+		        radius: '40',
+		        center: ['55%', '50%'],
+		        data: chart_data,
+		        itemStyle: {
+		            normal: {
+		                label: {
+		                    show: true,
+		                    formatter: '{b} : {c}元 ({d}%)',
+		                    textStyle: {
+		                        fontSize: 7
+		                    }
+		                },
+		                labelLine: {
+		                    show: true
+		                }
+		            }
+		        }
+		    }]
+		};
+		trend_option = {
+		    title: {
+		        text: '消费趋势',
+		        left: 'center',
+		        textStyle: {
+		            fontSize: 15
+		        }
+		    },
+		    tooltip: {
+		        trigger: 'axis',
+		        formatter: '{b}月:<br/>{c}元'
+		    },
+		    xAxis: [{
+		        data: datelist,
+		        name: '月份',
+		        splitLine: {
+		            show: false
+		        },
+		        axisLabel: {
+		            textStyle: {
+		                fontSize: 10
+		            }
+		        }
+		    }],
+		    yAxis: [{
+		        type: 'value',
+		        name: '消费(元)',
+		        splitLine: {
+		            show: false
+		        },
+		        axisLabel: {
+		            textStyle: {
+		                fontSize: 10
+		            }
+		        }
+		    }],
+		    series: [{
+		        name: '支出',
+		        type: 'line',
+		        data: valuelist,
+		        itemStyle: {
+		            normal: {
+		                label: {
+		                    show: false,
+		                    textStyle: {
+		                        fontSize: 7
+		                    }
+		                }
+		            }
+		        }
+		    }]
+		};
+		myChart.setOption(pie_option);
+		trendchart.setOption(trend_option);
+});	
+</script>
+</html>

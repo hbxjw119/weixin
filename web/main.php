@@ -1,6 +1,8 @@
 <?php
-include __DIR__ .'/conf/config.php';
-include __DIR__ .'/lib/wx.class.php';
+include __DIR__ .'/../conf/config.php';
+include __DIR__ .'/../lib/wx.class.php';
+include __DIR__ .'/../lib/mysql.php';
+
 //checkSignature();
 
 $obj = new WeChat();
@@ -8,6 +10,17 @@ $obj->responseMsg();
 
 class WeChat
 {
+	public $db_con = null;
+	public $category = null;
+
+	public function __construct()
+	{
+		global $dns;
+		global $account_category;
+		$this->db_con = new Mysql($dns['host'],$dns['user'],$dns['password'],$dns['db']);
+		$this->category = $account_category;
+	}
+
     public function responseMsg()
     {
         $postStr = file_get_contents("php://input");
@@ -20,11 +33,28 @@ class WeChat
             $type = $recevie['type'];
             if ($type == 'text') {
                 $content = $recevie['content'];
-                if ($content == '新闻') {
+				$arr = preg_split('/([0-9\.]+)/', $content, 0, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
+				if (count($arr) == 2) {
+					$info = $arr[0];
+					$pay = $arr[1];	
+					$user_id = $fromUsername;
+					$cate = $this->_getCategory($content);
+
+					if($this->db_con->insert('user_bill', ['user_id' => $user_id, 'info' => $info, 'category' => $cate, 'pay' => $pay])) {
+							$ret = '记账成功通知';
+							echo $wx->sendArticle($fromUsername, $toUsername, $this->handleArticle($user_id, $ret, $info, $cate, $pay));
+					} else {
+						$ret = '记录失败';
+						echo $wx->sendText($fromUsername, $toUsername, $ret);
+					}
+					
+				}
+				else if ($content == '新闻') {
                      $article_arr = $this->handleArticle();
                      $send = $wx->sendArticle($fromUsername,$toUsername,$article_arr);
                      echo $send;
-                } else if(!strstr($content,'歌曲')) {
+				} 
+				else if(!strstr($content,'歌曲')) {
                     $weather = $this->handleWeather($content);
                     $send = $wx->sendText($fromUsername,$toUsername,$weather);
                     echo $send;
@@ -50,7 +80,7 @@ class WeChat
 
     public function translateCity($city) 
     {
-        include __DIR__ . '/lib/Pinyin.php';
+        include __DIR__ . '/../lib/Pinyin.php';
         $pinyin = new Pinyin();
         return $pinyin->transformWithoutTone($city,'');
     }
@@ -121,20 +151,58 @@ class WeChat
             return $music_arr;
     }
 
-    public function handleArticle()
+    public function handleArticle($user_id, $title, $info, $category, $pay)
     {
         $news_arr = [];
+		$desc = "金额：" . $pay . "\n".
+			"备注：" . $info . "\n".
+			"类目：" . $category . "\n".
+			"时间：" . date("Y-m-d H:i:s") . "\n" ;
+		$desc .= "\n点击查看详情";
 
         $news = [
-                'title' => '全面屏iPhone X简直有毒！乔布斯的苹果终于回来了',
-                'desc' => 'iPhone X在发布前就已经被曝到体无完肤，万万没想到，发布会还真的是连打脸的机会都不给我！亏果粉们都熬夜看了一场重播',
-                'picurl' => 'https://mmbiz.qpic.cn/mmbiz_jpg/PicLGiaOegHVd9Ce8yFuGQkkIjBP1xMY772oMkG9LLFfQicYOrgPuPoEvnM7tNSRCWJXlsJ45eYoibByPX9xKm2wTw/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1',
-                'url' => 'https://mp.weixin.qq.com/s?__biz=MjM5NzAwNzMyMA==&mid=2659800881&idx=1&sn=210be5516bed1a183aba6e7abc0c7eeb&chksm=bd9d6d868aeae490248d7c7ad80c2245bae28e7a3473526cc17a9c53d3cd61c733b0ac58d470#rd'
+                'title' => $title,
+                'desc' => $desc,
+                'url' => BILL_URI . '/account/bill.html?uid=' . $user_id
         ];
         $news_arr[] = $news;
 
         return $news_arr;
     }
+	public function  _getCategory($bill_info)
+	{
+		$ret = '5';
+		foreach($this->category as $idx => $keywords) {
+			foreach($keywords as $k => $v) {
+				if (strstr($bill_info, $v)) {
+					$ret = $idx;
+					break;
+				}
+			}
+		}
+		return $ret;
+	}
+
+	public function _gatherAccount($user_id)
+	{
+		$ret = [];
+		$sql = "SELECT category,sum(pay) from `user_bill` where user_id='$user_id' group by category";
+		$user_bill_result = $this->db_con->query($sql, true);
+		$pay_type_result = $this->db_con->get('pay_type',['category','name']);
+		$category = [];
+		foreach($pay_type_result as $v) {
+			$category[$v[0]] = $v[1];
+		}
+		$sum = 0;
+		foreach($user_bill_result as $b) {
+			$tmp = $category[$b[0]];
+			$ret[$tmp] = $b[1];
+			$sum += $b[1];
+		}	
+		$ret['合计'] = $sum;
+		return $ret;
+		//$this->db_con->
+	}
 }
 
 /*
