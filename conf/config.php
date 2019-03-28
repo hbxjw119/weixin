@@ -8,12 +8,13 @@ $account_category = [
 	'1' => ['吃', '喝', '饭'],
 	'2' => ['买', '购物', '菜', '看', '超市'],
 	'3' => ['车', '地铁', '交通'],
-	'4' => ['房租', '水','电', '煤气', '加油']
+	'4' => ['房租', '水','电', '煤气', '加油'],
+	'5' => ['其他'],
 ];
 
-$db = [
+$dns = [
 	'host' => 'localhost',
-	'user' => 'user',
-	'password' => 'password',
-	'db' => 'dbname'
+	'user' => 'wx',
+	'password' => 'db.account.password',
+	'db' => 'Account'
 ];

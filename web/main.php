@@ -39,13 +39,18 @@ class WeChat
 				if (count($arr) == 2) {
 					$info = $arr[0];
 					$pay = $arr[1];	
-					$user_id = $fromUsername;
-					$cate_type = $this->_getCategory($content);
-					$cate = $this->cate[$cate_type];
-					
-					if($this->db_con->insert('user_bill', ['user_id' => $user_id, 'info' => $info, 'category' => $cate_type, 'pay' => $pay])) {
-							$ret = '记账成功通知';
-							echo $wx->sendArticle($fromUsername, $toUsername, $this->handleArticle($user_id, $ret, $info, $cate, $pay));
+					if (is_numeric($pay)) {
+						$user_id = $fromUsername;
+						$cate_type = $this->_getCategory($content);
+						$cate = $this->cate[$cate_type];
+						
+						if($this->db_con->insert('user_bill', ['user_id' => $user_id, 'info' => $info, 'category' => $cate_type, 'pay' => $pay])) {
+								$ret = '记账成功通知';
+								echo $wx->sendArticle($fromUsername, $toUsername, $this->handleArticle($user_id, $ret, $info, $cate, $pay));
+						} else {
+							$ret = '记账失败';
+							echo $wx->sendText($fromUsername, $toUsername, $ret);
+						}
 					} else {
 						$ret = '记录失败';
 						echo $wx->sendText($fromUsername, $toUsername, $ret);
@@ -130,7 +135,7 @@ class WeChat
     public function musicSearch($music)
     {
             $music_arr = [];
-            include __DIR__ . '/lib/Meting.php';
+            include __DIR__ . '/../lib/Meting.php';
             $api = new Meting('netease');
             $api = $api->format(true);
             $data = $api->search($music);
